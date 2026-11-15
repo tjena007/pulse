@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Pulse</title>
+  <script>if (!matchMedia("(prefers-reduced-motion: reduce)").matches) document.documentElement.classList.add("intro-on");</script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&family=Instrument+Serif&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body data-tab="foryou">
+  <div class="intro" id="intro" aria-hidden="true">
+    <div class="intro-stage">
+      <div class="radar" id="intro-radar">
+        <svg viewBox="0 0 200 200"><circle cx="100" cy="100" r="98" /><circle cx="100" cy="100" r="66" /><circle cx="100" cy="100" r="34" /><path d="M100 2v196M2 100h196" /></svg>
+        <div class="radar-sweep" id="radar-sweep"></div>
+        <div class="radar-blips" id="radar-blips"></div>
+      </div>
+      <div class="intro-word"><span>P</span><span>u</span><span>l</span><span>s</span><span>e</span></div>
+      <p class="intro-phase" id="intro-phase"></p>
+    </div>
+  </div>
+  <div class="intro-dot" id="intro-dot" aria-hidden="true"></div>
+
+  <div class="shell">
+    <aside class="side">
+      <a class="brand" href="/">
+        <svg class="mark" viewBox="0 0 24 24" aria-hidden="true"><circle class="ring outer" cx="12" cy="12" r="10.4" /><circle class="ring inner" cx="12" cy="12" r="6.9" /><path class="sweep" d="M12 12V1.6A10.4 10.4 0 0 1 19.35 4.65z" /><circle class="core" cx="12" cy="12" r="3.5" /></svg>
+        <span>Pulse</span>
+      </a>
+
+      <nav class="tablist" role="tablist" aria-label="Views" aria-orientation="vertical">
+        <button role="tab" id="tab-foryou" data-tab="foryou" aria-selected="true" aria-controls="main" tabindex="0">
+          <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 2.5l1.9 5.6 5.6 1.9-5.6 1.9-1.9 5.6-1.9-5.6-5.6-1.9 5.6-1.9z" /></svg>For you</button>
+        <button role="tab" id="tab-repos" data-tab="repos" aria-selected="false" aria-controls="main" tabindex="-1">
+          <svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="6" cy="4.5" r="2" /><circle cx="6" cy="15.5" r="2" /><circle cx="14" cy="7" r="2" /><path d="M6 6.5v7M14 9c0 3-8 2-8 4.5" /></svg>Repos</button>
+        <button role="tab" id="tab-saved" data-tab="saved" aria-selected="false" aria-controls="main" tabindex="-1">
+          <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M5.5 3.5h9v13l-4.5-3-4.5 3z" /></svg>Saved</button>
+        <button role="tab" id="tab-tuning" data-tab="tuning" aria-selected="false" aria-controls="main" tabindex="-1">
+          <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3 6h8M15 6h2M3 14h2M9 14h8" /><circle cx="13" cy="6" r="2" /><circle cx="7" cy="14" r="2" /></svg>Tuning</button>
+      </nav>
+
+      <div class="side-foot">
+        <div class="sync">
+          <span id="sync-status" class="sync-status" aria-live="polite"></span>
+          <span id="sync-bar" class="sync-bar" aria-hidden="true" hidden><i></i></span>
+          <button id="refresh" class="btn">Refresh</button>
+        </div>
+        <p class="llm" id="llm-line"></p>
+        <dl class="keys" aria-label="Keyboard shortcuts">
+          <dt><kbd>j</kbd><kbd>k</kbd></dt><dd>Move</dd>
+          <dt><kbd>o</kbd></dt><dd>Open</dd>
+          <dt><kbd>u</kbd><kbd>d</kbd></dt><dd>More or less like this</dd>
+          <dt><kbd>s</kbd><kbd>x</kbd></dt><dd>Save, hide</dd>
+          <dt><kbd>z</kbd></dt><dd>Undo</dd>
+          <dt><kbd>i</kbd></dt><dd>Why it ranked</dd>
+          <dt><kbd>/</kbd></dt><dd>Filter</dd>
+        </dl>
+      </div>
+    </aside>
+
+    <main id="main" class="sheet" role="tabpanel" aria-labelledby="tab-foryou">
+      <div class="col">
+        <header class="title-row">
+          <h1 id="title">Pulse</h1>
+          <p id="subline" class="subline"></p>
+        </header>
+
+        <section id="brief" class="brief" hidden></section>
+
+        <div id="workspace" class="workspace">
+          <div class="feed">
+            <div class="toolbar">
+              <h2 id="list-heading">Ranked for you</h2>
+              <span id="count" class="count"></span>
+              <input id="search" type="search" placeholder="Filter" aria-label="Filter the feed" />
+            </div>
+            <ol id="list" class="list"></ol>
+            <div id="list-end" aria-hidden="true"></div>
+          </div>
+          <aside id="detail" class="detail" aria-label="Selected item" hidden></aside>
+        </div>
+
+        <section id="tuning" class="tuning" hidden></section>
+      </div>
+    </main>
+  </div>
+
+  <div id="toast" class="toast" role="status"><span></span><button type="button" hidden>Undo</button></div>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js" defer></script>
+  <script src="/app.js" type="module"></script>
+</body>
+</html>
