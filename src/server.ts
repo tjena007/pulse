@@ -1,7 +1,7 @@
 import Fastify from "fastify";
 import fastifyStatic from "@fastify/static";
 import { join } from "node:path";
-import { ROOT, settings } from "./config.ts";
+import { BLOG_DAYS, ROOT, settings } from "./config.ts";
 import { getItem, getItems, getProfile, getSourceStatus, kvGet, kvSet, listItems, resetTermWeights, savedIds, setProfile, topTerms, clearAi, type Profile } from "./db.ts";
 import { applyFeedback, diversify, scoreItems, type Action } from "./rank.ts";
 import { getBrief, llmInfo } from "./llm.ts";
@@ -19,8 +19,9 @@ function feed(tab: string, q: string | undefined, limit: number) {
     const order = new Map(ids.map((id, i) => [id, i]));
     return scoreItems(getItems(ids)).sort((a, b) => order.get(a.id)! - order.get(b.id)!);
   }
-  const kind = tab === "repos" ? "repo" : "article";
-  items = scoreItems(listItems(kind, Date.now() - (kind === "repo" ? 7 : 3) * DAY))
+  const kind = tab === "repos" ? "repo" : tab === "blogs" ? "blog" : "article";
+  const days = { repo: 7, blog: BLOG_DAYS, article: 3 }[kind];
+  items = scoreItems(listItems(kind, Date.now() - days * DAY))
     .filter((i) => !i.state.hidden && i.state.vote !== -1);
   if (q) {
     const needle = q.toLowerCase();

@@ -23,6 +23,18 @@ const articles: [string, string, string, number | null, number, string, string, 
   ["Running Llama-class models with MLX on Apple silicon: a field guide", "r/LocalLLaMA", "Tokens/sec across M-series chips.", null, 8, "Community benchmarks of local inference speed on Apple silicon via MLX.", "Your Mac can host local models for this app.", 7],
 ];
 
+const blogs: [string, string, string, number, string, string, number][] = [
+  // title, source, summary, daysAgo, tldr, why, aiScore
+  ["How we rebuilt our streaming pipeline around a single event log", "Netflix", "Consolidating three Kafka clusters into one tiered log.", 2, "Netflix-style write-up on collapsing several Kafka clusters into one tiered event log.", "Event-driven architecture at very large scale.", 9],
+  ["Rate limiting at the edge without a central store", "Cloudflare", "Approximate counters synchronized between data centers.", 4, "How edge rate limiting works with approximate counters instead of a central database.", "Distributed systems design you can borrow.", 8],
+  ["Idempotency keys, ten years later", "Stripe", "What held up and what we changed in our API retry model.", 6, "A retrospective on idempotency keys in a payments API and the edge cases found since.", "Straight out of your payments domain.", 9],
+  ["Scaling code search to every repository", "GitHub", "Sharding, ranking and the index format behind code search.", 9, "Internals of a code search engine: sharding strategy, index format and ranking.", "Search infra for developer tools.", 7],
+  ["Moving our monolith's background jobs to Postgres", "Shopify", "Retiring a Redis job queue in favor of SKIP LOCKED.", 12, "A large Rails monolith moves its background jobs from Redis to Postgres.", "Queues on Postgres, one of your interests.", 8],
+  ["Evaluating coding agents on real pull requests", "Hugging Face", "A benchmark built from merged open-source PRs.", 15, "A new benchmark scores coding agents against real merged pull requests.", "Coding agents are your top interest.", 9],
+  ["Tracing every request through 4,000 microservices", "Uber", "Sampling strategies that keep tracing affordable.", 21, "How tail-based sampling keeps distributed tracing affordable at huge service counts.", "Observability at scale.", 7],
+  ["Designing the new canvas renderer", "Figma", "Moving rendering to WebGPU.", 33, "Why and how a design tool moved its canvas renderer to WebGPU.", "Interesting, less directly related to your work.", 5],
+];
+
 const repos: [string, string, string, number, number, string[], string, string, number][] = [
   // fullName, desc, lang, stars, starsToday, topics, tldr, why, aiScore
   ["acme-labs/agentbox", "Sandboxed runtime for coding agents with snapshot/restore", "TypeScript", 8400, 910, ["agents", "sandbox", "mcp"], "A container sandbox for running coding agents safely with instant rollback.", "Agent infra in your language.", 9],
@@ -48,11 +60,16 @@ export function mockItems(): NewItem[] {
     url: `https://github.com/${fullName}`, summary: desc, author: fullName.split("/")[0], publishedAt: now - (i * 4 + 1) * H,
     points: null, comments: null, commentsUrl: null, tags: topics, repo: { fullName, language, stars, starsToday, forks: Math.round(stars / 12), topics, createdAt: new Date(now - (i + 2) * 24 * H).toISOString() },
   }));
-  return [...a, ...r];
+  const b: NewItem[] = blogs.map(([title, source, summary, days], i) => ({
+    id: `mock-b${i}`, kind: "blog", source, title, url: `https://example.com/demo/blog/${i}`, summary, author: "demo",
+    publishedAt: now - days * 24 * H, points: null, comments: null, commentsUrl: null, tags: [], repo: null,
+  }));
+  return [...a, ...r, ...b];
 }
 
 /** Fake AI fields so the demo shows what enrichment looks like without an LLM. */
 export function mockEnrich() {
   articles.forEach(([, , , , , tldr, why, score], i) => setAi(`mock-a${i}`, { score, tldr, why, tags: [] }));
+  blogs.forEach(([, , , , tldr, why, score], i) => setAi(`mock-b${i}`, { score, tldr, why, tags: [] }));
   repos.forEach(([fullName, , , , , , tldr, why, score]) => setAi(`gh:${fullName}`, { score, tldr, why, tags: [] }));
 }

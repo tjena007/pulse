@@ -155,7 +155,7 @@ function renderDetail() {
 
 function renderList() {
   const list = $("#list");
-  const noun = state.tab === "repos" ? "repo" : state.tab === "saved" ? "item" : "story";
+  const noun = { repos: "repo", blogs: "post", saved: "item" }[state.tab] ?? "story";
   const n = state.items.length;
   const count = $("#count");
   count.innerHTML = `<span>${n}</span> ${n === 1 ? noun : noun === "story" ? "stories" : `${noun}s`}${state.q ? ` matching “${esc(state.q)}”` : ""}`;
@@ -165,6 +165,7 @@ function renderList() {
     const empty = {
       foryou: state.meta?.running ? ["Fetching your feed", "This takes a minute on the first run."] : ["Nothing here yet", "Press Refresh to fetch stories, or loosen your filter."],
       repos: ["No repos yet", "Press Refresh to pull GitHub Trending."],
+      blogs: ["No posts yet", "Press Refresh to pull the engineering blogs."],
       saved: ["Nothing saved", "Press s on any story or repo to keep it here."],
     }[state.tab] ?? ["No matches", ""];
     if (state.q) empty.splice(0, 2, "No matches", `Nothing in this tab mentions “${state.q}”.`);
@@ -192,12 +193,13 @@ function renderTitle() {
       `${today()} · ranked from the last 3 days`,
     ],
     repos: ["Trending repos", `${today()} · ${plural(n, "repo")} from the last 7 days, sorted by fit`],
+    blogs: ["Engineering blogs", `${plural(n, "post")} from company engineering blogs in the last 60 days, sorted by fit`],
     saved: ["Saved", `${plural(n, "item")} kept for later`],
     tuning: ["Tuning", "What Pulse ranks for, and what it has learned from your votes."],
   }[state.tab];
   $("#title").textContent = title;
   $("#subline").textContent = sub;
-  $("#list-heading").textContent = { foryou: "Ranked for you", repos: "Ranked repos", saved: "Saved items" }[state.tab] ?? "";
+  $("#list-heading").textContent = { foryou: "Ranked for you", repos: "Ranked repos", blogs: "Ranked posts", saved: "Saved items" }[state.tab] ?? "";
   document.body.dataset.tab = state.tab;
 }
 

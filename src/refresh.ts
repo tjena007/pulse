@@ -1,4 +1,4 @@
-import { config, settings } from "./config.ts";
+import { BLOG_DAYS, config, settings } from "./config.ts";
 import { getProfile, listItems, pruneOld, setSourceStatus, snapshotStars, upsertItems, type NewItem } from "./db.ts";
 import { fetchHackerNews } from "./sources/hackernews.ts";
 import { fetchRss } from "./sources/rss.ts";
@@ -80,7 +80,8 @@ export async function refresh(opts: { reenrich?: boolean } = {}) {
     const profile = getProfile();
     const since = Date.now() - 3 * 86400_000;
     const pool = [...listItems("article", since), ...listItems("repo", since)];
-    const candidates = scoreItems(pool, profile)
+    const blogs = listItems("blog", Date.now() - BLOG_DAYS * 86400_000);
+    const candidates = scoreItems([...pool, ...blogs], profile)
       .filter((i) => !i.state.hidden && i.state.vote !== -1 && (opts.reenrich || i.aiScore == null))
       .sort((a, b) => b.score - a.score)
       .slice(0, settings.llm.enrichLimit);
