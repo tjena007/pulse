@@ -2,6 +2,7 @@
   "name": "pulse",
   "version": "0.1.0",
   "private": true,
+  "license": "MIT",
   "description": "Localhost personalized AI news feed + trending GitHub repos",
   "type": "module",
   "engines": { "node": ">=22.13" },

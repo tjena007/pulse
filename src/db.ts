@@ -58,7 +58,7 @@ export function getProfile(): Profile {
   return kvGet<Profile>("profile", {
     interests: config.seedInterests,
     mutes: config.mutes,
-    about: "Senior backend engineer (TypeScript/NestJS, AWS, event-driven systems), getting into Kubernetes/Terraform and Go, heavy user of AI coding agents. Wants signal over hype.",
+    about: "Software engineer who builds backend systems and uses AI coding tools daily. Wants signal over hype.",
   });
 }
 export const setProfile = (p: Profile) => kvSet("profile", p);
