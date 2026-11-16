@@ -237,11 +237,18 @@ function renderSync() {
   btn.disabled = m.running;
   btn.textContent = m.running ? "Refreshing" : "Refresh";
   document.body.classList.toggle("is-syncing", !!m.running);
-  $("#sync-status").textContent = m.running ? m.phase : m.lastRun ? `Updated ${ago(m.lastRun)}${m.mock ? ", demo data" : ""}` : "";
+  $("#sync-status").textContent = m.running ? [m.phase, etaText(m.etaMs)].filter(Boolean).join(" · ") : m.lastRun ? `Updated ${ago(m.lastRun)}${m.mock ? ", demo data" : ""}` : "";
   const bar = $("#sync-bar");
   bar.hidden = !m.running;
   $("i", bar).style.width = m.running ? `${Math.round(syncProgress(m.phase) * 100)}%` : "0";
   if (m.llm) $("#llm-line").textContent = m.llm.provider === "none" ? "AI off" : `AI: ${m.llm.provider}${m.llm.model ? `, ${m.llm.model}` : ""}`;
+}
+
+function etaText(ms) {
+  if (ms == null) return "";
+  if (ms < 15_000) return "almost done";
+  if (ms < 60_000) return "under a minute left";
+  return `~${Math.round(ms / 60_000)} min left`;
 }
 
 // The server reports progress only as a phase name; these mirror the phases set in src/refresh.ts.

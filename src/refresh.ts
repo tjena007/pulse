@@ -4,11 +4,32 @@ import { fetchHackerNews } from "./sources/hackernews.ts";
 import { fetchRss } from "./sources/rss.ts";
 import { fetchNewRising, fetchTrending } from "./sources/github.ts";
 import { enrichItems, generateBrief, llmInfo } from "./llm.ts";
-import { kvSet } from "./db.ts";
+import { kvGet, kvSet } from "./db.ts";
 import { diversify, scoreItems } from "./rank.ts";
 import { mockEnrich, mockItems } from "./fixtures.ts";
 
-export const status = { running: false, phase: "idle", lastRun: 0 as number, lastError: null as string | null, enriched: 0 };
+export const status = {
+  running: false, phase: "idle", lastRun: 0 as number, lastError: null as string | null, enriched: 0, startedAt: 0,
+  get etaMs() { return eta(); },
+};
+
+interface Timing { totalMs: number; briefMs: number }
+let phaseAt = 0;
+
+/** Remaining time for the running refresh: live per-item rate while summarizing, otherwise the last run's timings. */
+function eta(): number | null {
+  if (!status.running) return null;
+  const last = kvGet<Timing | null>("refreshTiming", null);
+  const now = Date.now();
+  const step = status.phase.match(/^summarizing (\d+)\/(\d+)/);
+  if (step && Number(step[1]) > 0) {
+    const [done, total] = [Number(step[1]), Number(step[2])];
+    return ((total - done) * (now - phaseAt)) / done + (last?.briefMs ?? 0);
+  }
+  if (!last) return null;
+  if (status.phase === "writing brief") return Math.max(0, last.briefMs - (now - phaseAt));
+  return Math.max(0, last.totalMs - (now - status.startedAt));
+}
 
 function mergeRepos(items: NewItem[]): NewItem[] {
   const byId = new Map<string, NewItem>();
@@ -44,7 +65,7 @@ async function run(name: string, fn: () => Promise<NewItem[]>): Promise<NewItem[
 
 export async function refresh(opts: { reenrich?: boolean } = {}) {
   if (status.running) return status;
-  status.running = true; status.lastError = null; status.phase = "fetching";
+  status.running = true; status.lastError = null; status.phase = "fetching"; status.startedAt = Date.now();
   try {
     const s = config.sources;
     const jobs: Promise<NewItem[]>[] = [];
@@ -85,13 +106,14 @@ export async function refresh(opts: { reenrich?: boolean } = {}) {
       .filter((i) => !i.state.hidden && i.state.vote !== -1 && (opts.reenrich || i.aiScore == null))
       .sort((a, b) => b.score - a.score)
       .slice(0, settings.llm.enrichLimit);
-    status.phase = `summarizing ${candidates.length} items`;
+    status.phase = `summarizing ${candidates.length} items`; phaseAt = Date.now();
     status.enriched = await enrichItems(candidates, profile, (n) => { status.phase = `summarizing ${n}/${candidates.length}`; });
 
-    status.phase = "writing brief";
+    status.phase = "writing brief"; phaseAt = Date.now();
     const top = diversify(scoreItems(pool, profile).filter((i) => !i.state.hidden && i.state.vote !== -1)).slice(0, 20);
     await generateBrief(top, profile);
     status.lastRun = Date.now();
+    kvSet("refreshTiming", { totalMs: status.lastRun - status.startedAt, briefMs: status.lastRun - phaseAt } satisfies Timing);
   } catch (e) {
     status.lastError = (e as Error).message;
     console.error(e);
