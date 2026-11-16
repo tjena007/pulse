@@ -2,8 +2,7 @@
 
 A news feed that runs on your own machine. It collects AI and developer news, company engineering blogs and trending GitHub repos, ranks them for you, and gets better the more you vote.
 
-<!-- Screenshot: add one at docs/screenshot.png and uncomment the next line. -->
-<!-- ![Pulse](docs/screenshot.png) -->
+![Pulse's For you tab: the AI brief on top, ranked stories below and a breakdown of why the selected story ranked where it did](docs/screenshot.png)
 
 - **One place to read.** Hacker News, AI news sites, 22 company engineering blogs and GitHub Trending, all in one keyboard-driven page.
 - **Ranked for you.** It starts with the topics you set and learns from every upvote, downvote, save and click.
@@ -96,6 +95,12 @@ npx pm2 start npm --name pulse -- start
 - **Blogs:** posts from company engineering blogs over the last 60 days. These stay out of For You, so it remains a news feed.
 - **Saved:** anything you saved, newest first.
 - **Tuning:** your interests, muted words, what Pulse has learned from your votes, and which sources failed on the last refresh.
+
+| Blogs | Repos |
+| --- | --- |
+| ![Blogs tab ranking posts from company engineering blogs](docs/blogs.png) | ![Repos tab ranking trending GitHub repos with stars gained today](docs/repos.png) |
+
+The screenshots use demo data.
 
 ### Keyboard
 
