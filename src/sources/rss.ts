@@ -1,6 +1,6 @@
 import { XMLParser } from "fast-xml-parser";
 import type { NewItem } from "../db.ts";
-import type { RssFeed } from "../config.ts";
+import { BLOG_DAYS, type RssFeed } from "../config.ts";
 import { http, idFor, stripHtml } from "./util.ts";
 
 const parser = new XMLParser({ ignoreAttributes: false, attributeNamePrefix: "@_", textNodeName: "#text", processEntities: true });
@@ -17,7 +17,8 @@ export async function fetchRss(feed: RssFeed): Promise<NewItem[]> {
   const xml = await (await http(feed.url, { headers: { accept: "application/rss+xml, application/atom+xml, application/xml, text/xml" } })).text();
   const doc = parser.parse(xml);
   const raw: any[] = doc.rss ? arr(doc.rss.channel?.item) : doc.feed ? arr(doc.feed.entry) : arr(doc["rdf:RDF"]?.item);
-  const cutoff = Date.now() - 7 * 86400_000;
+  const kind = feed.kind ?? "article";
+  const cutoff = Date.now() - (kind === "blog" ? BLOG_DAYS : 7) * 86400_000;
   const out: NewItem[] = [];
   for (const e of raw.slice(0, 50)) {
     const title = stripHtml(text(e.title), 300);
@@ -30,7 +31,7 @@ export async function fetchRss(feed: RssFeed): Promise<NewItem[]> {
     const body = text(e.description ?? e.summary ?? e["content:encoded"] ?? e.content);
     const tags = arr(e.category).map((c: any) => text(c) || c?.["@_term"] || "").filter(Boolean).slice(0, 6);
     out.push({
-      id: idFor(url), kind: "article", source: feed.name, title, url, summary: stripHtml(body),
+      id: idFor(url), kind, source: feed.name, title, url, summary: stripHtml(body),
       author: stripHtml(text(e.author?.name ?? e.author ?? e["dc:creator"]), 80), publishedAt,
       points: null, comments: null, commentsUrl: null, tags, repo: null,
     });

@@ -80,7 +80,8 @@ export function scoreItems(items: Item[], profile: Profile = getProfile()): Scor
     // 3) popularity + recency
     const pop = popularity(item);
     const ageH = (now - item.publishedAt) / 3600_000;
-    const recency = Math.pow(0.5, Math.max(0, ageH) / (item.repo ? 48 : 24));
+    const halfLifeH = item.kind === "blog" ? 14 * 24 : item.repo ? 48 : 24;
+    const recency = Math.pow(0.5, Math.max(0, ageH) / halfLifeH);
 
     // 4) LLM relevance (if enriched)
     const ai = item.aiScore != null ? item.aiScore / 10 : null;

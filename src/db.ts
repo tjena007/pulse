@@ -1,11 +1,11 @@
 import { DatabaseSync } from "node:sqlite";
 import { join } from "node:path";
-import { DATA_DIR, config, type Interest } from "./config.ts";
+import { BLOG_DAYS, DATA_DIR, config, type Interest } from "./config.ts";
 
 export interface RepoMeta { fullName: string; language: string | null; stars: number; starsToday: number | null; forks: number | null; topics?: string[]; createdAt?: string }
 export interface Item {
   id: string;
-  kind: "article" | "repo";
+  kind: "article" | "repo" | "blog";
   source: string;
   title: string;
   url: string;
@@ -58,7 +58,7 @@ export function getProfile(): Profile {
   return kvGet<Profile>("profile", {
     interests: config.seedInterests,
     mutes: config.mutes,
-    about: "Senior backend engineer (TypeScript/NestJS, AWS, event-driven systems), getting into Kubernetes/Terraform and Go, heavy user of AI coding agents. Wants signal over hype.",
+    about: "Software engineer who builds backend systems and uses AI coding tools daily. Wants signal over hype.",
   });
 }
 export const setProfile = (p: Profile) => kvSet("profile", p);
@@ -75,7 +75,7 @@ const upsertStmt = db.prepare(`
 INSERT INTO items (id, kind, source, title, url, summary, author, published_at, fetched_at, points, comments, comments_url, tags, repo)
 VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)
 ON CONFLICT(id) DO UPDATE SET
-  title = excluded.title, summary = COALESCE(excluded.summary, items.summary),
+  kind = excluded.kind, title = excluded.title, summary = COALESCE(excluded.summary, items.summary),
   points = COALESCE(excluded.points, items.points), comments = COALESCE(excluded.comments, items.comments),
   comments_url = COALESCE(excluded.comments_url, items.comments_url),
   repo = COALESCE(excluded.repo, items.repo), fetched_at = excluded.fetched_at
@@ -92,7 +92,7 @@ export function upsertItems(items: NewItem[]) {
   } catch (e) { db.exec("ROLLBACK"); throw e; }
 }
 
-export function listItems(kind: "article" | "repo", sinceMs: number): Item[] {
+export function listItems(kind: Item["kind"], sinceMs: number): Item[] {
   return (db.prepare("SELECT * FROM items WHERE kind = ? AND (published_at >= ? OR fetched_at >= ?)").all(kind, sinceMs, sinceMs) as any[]).map(toItem);
 }
 export function getItem(id: string): Item | undefined {
@@ -110,8 +110,9 @@ export function setAi(id: string, ai: { score: number; why: string; tldr: string
 export function clearAi() { db.exec("UPDATE items SET ai_score = NULL, ai_why = NULL, ai_tldr = NULL, ai_tags = '[]'"); }
 
 export function pruneOld(days: number) {
-  const cutoff = Date.now() - days * 86400_000;
-  db.prepare(`DELETE FROM items WHERE fetched_at < ? AND id NOT IN (SELECT item_id FROM item_state WHERE saved = 1)`).run(cutoff);
+  const cutoff = (d: number) => Date.now() - d * 86400_000;
+  db.prepare(`DELETE FROM items WHERE fetched_at < ? AND (kind != 'blog' OR fetched_at < ?) AND id NOT IN (SELECT item_id FROM item_state WHERE saved = 1)`)
+    .run(cutoff(days), cutoff(Math.max(days, BLOG_DAYS)));
   db.prepare("DELETE FROM star_snapshots WHERE day < ?").run(new Date(Date.now() - 60 * 86400_000).toISOString().slice(0, 10));
 }
 

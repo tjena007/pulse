@@ -7,7 +7,9 @@ export const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 if (existsSync(join(ROOT, ".env"))) process.loadEnvFile(join(ROOT, ".env"));
 
 export interface Interest { topic: string; weight: number; keywords: string[] }
-export interface RssFeed { name: string; url: string; enabled: boolean }
+export interface RssFeed { name: string; url: string; enabled: boolean; kind?: "blog" }
+// Company engineering blogs post a few times a month, so they need a far longer window than news.
+export const BLOG_DAYS = 60;
 export interface AppConfig {
   seedInterests: Interest[];
   mutes: string[];

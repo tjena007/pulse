@@ -155,7 +155,7 @@ function renderDetail() {
 
 function renderList() {
   const list = $("#list");
-  const noun = state.tab === "repos" ? "repo" : state.tab === "saved" ? "item" : "story";
+  const noun = { repos: "repo", blogs: "post", saved: "item" }[state.tab] ?? "story";
   const n = state.items.length;
   const count = $("#count");
   count.innerHTML = `<span>${n}</span> ${n === 1 ? noun : noun === "story" ? "stories" : `${noun}s`}${state.q ? ` matching “${esc(state.q)}”` : ""}`;
@@ -165,6 +165,7 @@ function renderList() {
     const empty = {
       foryou: state.meta?.running ? ["Fetching your feed", "This takes a minute on the first run."] : ["Nothing here yet", "Press Refresh to fetch stories, or loosen your filter."],
       repos: ["No repos yet", "Press Refresh to pull GitHub Trending."],
+      blogs: ["No posts yet", "Press Refresh to pull the engineering blogs."],
       saved: ["Nothing saved", "Press s on any story or repo to keep it here."],
     }[state.tab] ?? ["No matches", ""];
     if (state.q) empty.splice(0, 2, "No matches", `Nothing in this tab mentions “${state.q}”.`);
@@ -192,12 +193,13 @@ function renderTitle() {
       `${today()} · ranked from the last 3 days`,
     ],
     repos: ["Trending repos", `${today()} · ${plural(n, "repo")} from the last 7 days, sorted by fit`],
+    blogs: ["Engineering blogs", `${plural(n, "post")} from company engineering blogs in the last 60 days, sorted by fit`],
     saved: ["Saved", `${plural(n, "item")} kept for later`],
     tuning: ["Tuning", "What Pulse ranks for, and what it has learned from your votes."],
   }[state.tab];
   $("#title").textContent = title;
   $("#subline").textContent = sub;
-  $("#list-heading").textContent = { foryou: "Ranked for you", repos: "Ranked repos", saved: "Saved items" }[state.tab] ?? "";
+  $("#list-heading").textContent = { foryou: "Ranked for you", repos: "Ranked repos", blogs: "Ranked posts", saved: "Saved items" }[state.tab] ?? "";
   document.body.dataset.tab = state.tab;
 }
 
@@ -235,11 +237,18 @@ function renderSync() {
   btn.disabled = m.running;
   btn.textContent = m.running ? "Refreshing" : "Refresh";
   document.body.classList.toggle("is-syncing", !!m.running);
-  $("#sync-status").textContent = m.running ? m.phase : m.lastRun ? `Updated ${ago(m.lastRun)}${m.mock ? ", demo data" : ""}` : "";
+  $("#sync-status").textContent = m.running ? [m.phase, etaText(m.etaMs)].filter(Boolean).join(" · ") : m.lastRun ? `Updated ${ago(m.lastRun)}${m.mock ? ", demo data" : ""}` : "";
   const bar = $("#sync-bar");
   bar.hidden = !m.running;
   $("i", bar).style.width = m.running ? `${Math.round(syncProgress(m.phase) * 100)}%` : "0";
   if (m.llm) $("#llm-line").textContent = m.llm.provider === "none" ? "AI off" : `AI: ${m.llm.provider}${m.llm.model ? `, ${m.llm.model}` : ""}`;
+}
+
+function etaText(ms) {
+  if (ms == null) return "";
+  if (ms < 15_000) return "almost done";
+  if (ms < 60_000) return "under a minute left";
+  return `~${Math.round(ms / 60_000)} min left`;
 }
 
 // The server reports progress only as a phase name; these mirror the phases set in src/refresh.ts.
